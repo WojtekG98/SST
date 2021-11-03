@@ -38,17 +38,16 @@ def plan(space, planner, runTime, start, goal):
     elif planner.lower() == "informedrrtstar":
         ss.setPlanner(og.InformedRRTstar(ss.getSpaceInformation()))
     elif planner.lower() == "sst":
+        print("SST")
         ss.setPlanner(og.SST(ss.getSpaceInformation()))
-    elif planner.lower() == "sststar":
-        ss.setPlanner(og.SSTstar(ss.getSpaceInformation()))
     else:
         print('Bad planner')
     print(planner, ":")
-    if planner.lower() == "informedrrtstar" or planner.lower() == "rrtstar":
-        ss.setup()
-        OptObj = ss.getOptimizationObjective()
+    if planner.lower() == "sst" or planner.lower() == "rrtstar":
+        OptObj = ob.PathLengthOptimizationObjective(ss.getSpaceInformation())
         OptObj.setCostThreshold(c_best)
         ss.setOptimizationObjective(OptObj)
+        print(ss.getOptimizationObjective().getDescription())
     solved = ss.solve(runTime)
     print(ss.getLastPlanComputationTime())
     if solved:
@@ -135,11 +134,11 @@ def set_start_and_goal(start, goal):
 def badanie(nr, space, start, goal):
     nazwa_pliku = "1.txt"
     if cies == 1:
-        nazwa_pliku = "badania/gap/gap5" + str(nr) + ".txt"
+        nazwa_pliku = "badania/gap" + str(nr) + ".txt"
     elif prostokat == 1:
-        nazwa_pliku = "badania/obs/kwadrat_N" + str(N) + "_dgoal_" + str(dgoal) + "_" + str(nr) + ".txt"
-    f = open(nazwa_pliku, 'w')
-    sys.stdout = f
+        nazwa_pliku = "badania/kwadrat_N" + str(N) + "_dgoal_" + str(dgoal) + "_" + str(nr) + ".txt"
+    # f = open(nazwa_pliku, 'w')
+    # sys.stdout = f
     if cies == 1:
         print("GAP\n")
     elif prostokat == 1:
@@ -149,14 +148,14 @@ def badanie(nr, space, start, goal):
     rrtstar_path = plan(space, 'rrtstar', 1000, start, goal)
     plot_path_to_png(rrtstar_path, 'g-', 0, N, 1, ('RRT*', 'start', 'goal'), 'figures/path_RRTStar.png')
 
-    informedrrtstar_path = plan(space, 'informedrrtstar', 1000, start, goal)
-    plot_path_to_png(informedrrtstar_path, 'm-', 0, N, 2, ('Informed RRT*', 'start', 'goal'),'figures/path_InformedRRTStar.png')
+    sst_path = plan(space, 'sst', 10, start, goal)
+    plot_path_to_png(sst_path, 'm-', 0, N, 2, ('SST', 'start', 'goal'), 'figures/path_SST.png')
 
     plt.figure(3)
     paintobs()
     plot_path(rrtstar_path, 'g-', 0, N)
-    plot_path(informedrrtstar_path, 'm-', 0, N)
-    plt.legend(('RRT*', 'Informed RRT*'))
+    plot_path(sst_path, 'm-', 0, N)
+    plt.legend(('RRT*', 'SST'))
     plt.gca().set_aspect('equal', adjustable='box')
     plt.plot(start[0], start[1], 'g*')
     plt.plot(goal[0], goal[1], 'y*')
@@ -175,7 +174,7 @@ if __name__ == '__main__':
     print("start: ", start[0], start[1])
     print("goal: ", goal[0], goal[1])
     if prostokat == 1:
-        astar_path_length = plan(space, 'astar', 1000, start, goal)
+        astar_path_length = None # plan(space, 'astar', 1000, start, goal)
         print(astar_path_length)
         if astar_path_length:
             c_best = 1.02 * astar_path_length
@@ -183,5 +182,6 @@ if __name__ == '__main__':
             c_best = dgoal*dgoal
     else:
         c_best = 150
-    for numer in range(10):
-        badanie(numer, space, start, goal)
+    badanie(1, space, start, goal)
+    #for numer in range(10):
+    #    badanie(numer, space, start, goal)
